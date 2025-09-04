@@ -1,5 +1,5 @@
 fastapi
 uvicorn
 redis
-pydantic[email]
 passlib[bcrypt]
+python-dotenv

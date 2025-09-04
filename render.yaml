@@ -4,11 +4,12 @@ services:
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn main:app --host 0.0.0.0 --port 10000
-    plan: free
     envVars:
       - key: REDIS_HOST
         sync: false
       - key: REDIS_PORT
+        sync: false
+      - key: REDIS_USER
         sync: false
       - key: REDIS_PASSWORD
         sync: false
