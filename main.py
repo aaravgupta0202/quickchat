@@ -32,21 +32,12 @@ app = FastAPI(title="REVER Backend")
 
 # Get the frontend URL from an environment variable for security and flexibility
 # Use a default value for local development
-FE_URL = os.getenv("FE_URL", "http://localhost:3000")
-
-origins = [
-    "http://localhost",
-    "http://localhost:8000",
-    "http://localhost:3000",
-    FE_URL,
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["https://rever-app.netlify.app"],  # Your Netlify URL
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 # ---------------------------
