@@ -3,3 +3,4 @@ uvicorn
 redis
 passlib[bcrypt]
 python-dotenv
+pydantic[email]
