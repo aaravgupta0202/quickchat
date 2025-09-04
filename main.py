@@ -1,100 +1,90 @@
-import os
-import redis
 from fastapi import FastAPI, HTTPException
-from passlib.hash import bcrypt
-from datetime import datetime
 from pydantic import BaseModel, EmailStr
+import redis
+import os
 
-# Redis connection (use env variables in Render/.env)
+# ---------------------------
+# Redis connection
+# ---------------------------
+redis_host = os.getenv("REDIS_HOST", "localhost")
+redis_port = os.getenv("REDIS_PORT", 6379)
+redis_password = os.getenv("REDIS_PASSWORD", None)
+
 r = redis.Redis(
-    host=os.getenv("REDIS_HOST", "localhost"),
-    port=int(os.getenv("REDIS_PORT", 6379)),
-    username=os.getenv("REDIS_USER", None),
-    password=os.getenv("REDIS_PASSWORD", None),
+    host=redis_host,
+    port=int(redis_port),
+    password=redis_password,
     decode_responses=True
 )
 
+# ---------------------------
+# FastAPI setup
+# ---------------------------
 app = FastAPI(title="REVER Backend")
 
-# ------------------ Models ------------------
-
-class RegisterUser(BaseModel):
+# ---------------------------
+# Models
+# ---------------------------
+class RegisterModel(BaseModel):
     name: str
     email: EmailStr
     password: str
 
-class LoginUser(BaseModel):
+class LoginModel(BaseModel):
     email: EmailStr
     password: str
 
-class UpdateUser(BaseModel):
+class UpdateModel(BaseModel):
     email: EmailStr
     name: str | None = None
     password: str | None = None
 
+class DeleteModel(BaseModel):
+    email: EmailStr
 
-def user_key(email: str):
-    return f"user:{email}"
-
-# ------------------ Routes ------------------
+# ---------------------------
+# Endpoints
+# ---------------------------
 
 @app.get("/")
 def root():
-    return {"status": "Backend running ✅"}
-
+    return {"message": "Backend running successfully 🚀"}
 
 @app.post("/register")
-def register(user: RegisterUser):
-    if r.exists(user_key(user.email)):
+def register(user: RegisterModel):
+    if r.exists(user.email):
         raise HTTPException(status_code=400, detail="User already exists")
 
-    hashed_pw = bcrypt.hash(user.password)
-    now = datetime.utcnow().isoformat()
-
-    r.hset(
-        user_key(user.email),
-        mapping={
-            "name": user.name,
-            "email": user.email,
-            "password": hashed_pw,
-            "created_at": now,
-            "updated_at": now,
-        },
-    )
+    r.hset(user.email, mapping={"name": user.name, "password": user.password})
     return {"message": "User registered successfully"}
 
-
 @app.post("/login")
-def login(user: LoginUser):
-    db_user = r.hgetall(user_key(user.email))
-    if not db_user:
+def login(user: LoginModel):
+    if not r.exists(user.email):
+        raise HTTPException(status_code=404, detail="User not found")
+
+    stored_password = r.hget(user.email, "password")
+    if stored_password != user.password:
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
-    if not bcrypt.verify(user.password, db_user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    return {"message": "Login successful", "name": db_user.get("name")}
-
+    return {"message": "Login successful"}
 
 @app.post("/update")
-def update(user: UpdateUser):
-    if not r.exists(user_key(user.email)):
-        raise HTTPException(status_code=404, detail="Account not found")
+def update(user: UpdateModel):
+    if not r.exists(user.email):
+        raise HTTPException(status_code=404, detail="User not found")
 
-    updates = {"updated_at": datetime.utcnow().isoformat()}
     if user.name:
-        updates["name"] = user.name
+        r.hset(user.email, "name", user.name)
     if user.password:
-        updates["password"] = bcrypt.hash(user.password)
+        r.hset(user.email, "password", user.password)
 
-    r.hset(user_key(user.email), mapping=updates)
     return {"message": "Account updated successfully"}
 
+@app.delete("/delete")
+def delete(user: DeleteModel):
+    if not r.exists(user.email):
+        raise HTTPException(status_code=404, detail="User not found")
 
-@app.delete("/delete/{email}")
-def delete(email: EmailStr):
-    if not r.exists(user_key(email)):
-        raise HTTPException(status_code=404, detail="Account not found")
-
-    r.delete(user_key(email))
+    r.delete(user.email)
     return {"message": "Account deleted successfully"}
