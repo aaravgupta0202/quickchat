@@ -29,7 +29,8 @@ r = redis.Redis(
 app = FastAPI(title="Chat Room Backend")
 
 # CORS configuration
-frontend_url = os.getenv("FRONTEND_URL", "http://localhost:8000")
+# CORS configuration - UPDATE THIS
+frontend_url = os.getenv("FRONTEND_URL", "https://rever-app.netlify.app")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[frontend_url],
