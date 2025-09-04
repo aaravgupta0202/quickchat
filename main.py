@@ -77,8 +77,13 @@ def check_room_exists(room_code: str):
     return {"exists": exists}
 
 @app.post("/room/create")
-def create_room(room_data: CreateRoomModel):
+def create_room(room_data: CreateRoomModel = None):
     """Create a new chat room"""
+    # Handle case where no JSON body is sent
+    user_name = "Unknown User"
+    if room_data and room_data.user_name:
+        user_name = room_data.user_name
+    
     room_code = str(uuid.uuid4())[:8].upper()  # Generate a simple 8-character code
     r.setex(f"room:{room_code}", 3600, "active")  # Room expires after 1 hour
     
@@ -88,7 +93,7 @@ def create_room(room_data: CreateRoomModel):
     # Add system message for room creation
     system_message = {
         "type": "system",
-        "content": f"Room created by {room_data.user_name}",
+        "content": f"Room created by {user_name}",
         "timestamp": time.time()
     }
     chat_messages[room_code].append(system_message)
