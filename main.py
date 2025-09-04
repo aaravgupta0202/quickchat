@@ -1,32 +1,69 @@
+import os
+import redis
+from urllib.parse import urlparse
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
-import redis
-import os
 from fastapi.middleware.cors import CORSMiddleware
-
 
 # ---------------------------
 # Redis connection
 # ---------------------------
-redis_host = os.getenv("REDIS_HOST", "localhost")
-redis_port = os.getenv("REDIS_PORT", 6379)
-redis_password = os.getenv("REDIS_PASSWORD", None)
+# Render provides a single REDIS_URL environment variable.
+# We need to parse this URL to get the host, port, and password.
+redis_url = os.getenv("REDIS_URL")
 
-r = redis.Redis(
-    host=redis_host,
-    port=int(redis_port),
-    password=redis_password,
-    decode_responses=True
-)
+if redis_url:
+    url = urlparse(redis_url)
+    r = redis.Redis(
+        host=url.hostname,
+        port=url.port,
+        password=url.password,
+        decode_responses=True
+    )
+    print("Connected to Redis using Render's REDIS_URL.")
+else:
+    # Fallback to localhost for local development
+    r = redis.Redis(
+        host=os.getenv("REDIS_HOST", "localhost"),
+        port=int(os.getenv("REDIS_PORT", 6379)),
+        password=os.getenv("REDIS_PASSWORD", None),
+        decode_responses=True
+    )
+    print("Connected to local Redis.")
+
+# Check the connection
+try:
+    r.ping()
+    print("Redis connection successful!")
+except redis.exceptions.ConnectionError as e:
+    print(f"Could not connect to Redis: {e}")
+    # You might want to raise an exception here to prevent the app from starting
+    # raise HTTPException(status_code=500, detail="Database connection failed")
 
 # ---------------------------
 # FastAPI setup
 # ---------------------------
 app = FastAPI(title="REVER Backend")
 
+# Define allowed origins for CORS.
+# You can get your Netlify URL from your Netlify dashboard.
+# It should look something like "https://your-site-name.netlify.app".
+# Replace the placeholder URL below with your actual Netlify URL.
+# It is best practice to get this from an environment variable on Render.
+# For example, you can set an env var called 'FE_URL' in Render's dashboard.
+# Then, fetch the value using: os.getenv("FE_URL")
+FE_URL = "https://rever-sample.netlify.app/" # <--- REPLACE THIS
+
+origins = [
+    "http://localhost",
+    "http://localhost:8000",
+    "http://localhost:3000", # Common for React/Vue dev servers
+    FE_URL,
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for testing; later restrict to your Netlify/Render frontend URL
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
