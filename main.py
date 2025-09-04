@@ -52,7 +52,7 @@ app = FastAPI(title="REVER Backend")
 # It is best practice to get this from an environment variable on Render.
 # For example, you can set an env var called 'FE_URL' in Render's dashboard.
 # Then, fetch the value using: os.getenv("FE_URL")
-FE_URL = "https://rever-sample.netlify.app/" # <--- REPLACE THIS
+FE_URL = "https://rever-app.netlify.app/" # <--- REPLACE THIS
 
 origins = [
     "http://localhost",
