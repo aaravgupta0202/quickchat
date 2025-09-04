@@ -1,10 +1,12 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import redis
 import os
 import uuid
 import json
+import time
 from typing import Dict, List
+from pydantic import BaseModel
 
 # ---------------------------
 # Redis connection
@@ -29,8 +31,7 @@ r = redis.Redis(
 app = FastAPI(title="Chat Room Backend")
 
 # CORS configuration
-# CORS configuration - UPDATE THIS
-frontend_url = os.getenv("FRONTEND_URL", "https://rever-app.netlify.app")
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:8000")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[frontend_url],
@@ -39,74 +40,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Store active WebSocket connections
-class ConnectionManager:
-    def __init__(self):
-        self.active_connections: Dict[str, List[WebSocket]] = {}
-        self.user_names: Dict[str, str] = {}
+# ---------------------------
+# In-memory storage for messages
+# ---------------------------
+# This stores messages temporarily (resets on server restart)
+# For production, you might want to use Redis for this too
+chat_messages: Dict[str, List[Dict]] = {}
 
-    async def connect(self, websocket: WebSocket, room_code: str, user_name: str):
-        await websocket.accept()
-        
-        if room_code not in self.active_connections:
-            self.active_connections[room_code] = []
-            # Store room in Redis with 1-hour expiration
-            r.setex(f"room:{room_code}", 3600, "active")
-        
-        self.active_connections[room_code].append(websocket)
-        # Store user info
-        self.user_names[id(websocket)] = user_name
-        
-        # Notify room that user joined
-        await self.broadcast_system_message(room_code, f"{user_name} joined the chat")
-        
-        return room_code
+# ---------------------------
+# Models
+# ---------------------------
+class MessageModel(BaseModel):
+    room_code: str
+    user_name: str
+    content: str
 
-    def disconnect(self, websocket: WebSocket, room_code: str):
-        if room_code in self.active_connections and websocket in self.active_connections[room_code]:
-            self.active_connections[room_code].remove(websocket)
-            user_name = self.user_names.get(id(websocket), "Someone")
-            
-            # Remove room if empty
-            if len(self.active_connections[room_code]) == 0:
-                del self.active_connections[room_code]
-                # Remove from Redis
-                r.delete(f"room:{room_code}")
-            
-            # Remove user info
-            if id(websocket) in self.user_names:
-                del self.user_names[id(websocket)]
-            
-            return user_name
+class JoinRoomModel(BaseModel):
+    room_code: str
+    user_name: str
 
-    async def broadcast(self, room_code: str, message: str, sender_name: str):
-        if room_code in self.active_connections:
-            message_data = {
-                "type": "message",
-                "sender": sender_name,
-                "content": message,
-                "timestamp": os.times().user  # Simple timestamp
-            }
-            for connection in self.active_connections[room_code]:
-                try:
-                    await connection.send_json(message_data)
-                except:
-                    pass
-
-    async def broadcast_system_message(self, room_code: str, message: str):
-        if room_code in self.active_connections:
-            message_data = {
-                "type": "system",
-                "content": message,
-                "timestamp": os.times().user
-            }
-            for connection in self.active_connections[room_code]:
-                try:
-                    await connection.send_json(message_data)
-                except:
-                    pass
-
-manager = ConnectionManager()
+class CreateRoomModel(BaseModel):
+    user_name: str
 
 # ---------------------------
 # Endpoints
@@ -123,25 +77,148 @@ def check_room_exists(room_code: str):
     return {"exists": exists}
 
 @app.post("/room/create")
-def create_room():
+def create_room(room_data: CreateRoomModel):
     """Create a new chat room"""
     room_code = str(uuid.uuid4())[:8].upper()  # Generate a simple 8-character code
     r.setex(f"room:{room_code}", 3600, "active")  # Room expires after 1 hour
+    
+    # Initialize empty messages list for the room
+    chat_messages[room_code] = []
+    
+    # Add system message for room creation
+    system_message = {
+        "type": "system",
+        "content": f"Room created by {room_data.user_name}",
+        "timestamp": time.time()
+    }
+    chat_messages[room_code].append(system_message)
+    
     return {"room_code": room_code}
 
-# WebSocket endpoint for chat
-@app.websocket("/ws/{room_code}/{user_name}")
-async def websocket_endpoint(websocket: WebSocket, room_code: str, user_name: str):
-    # Connect to the room
-    await manager.connect(websocket, room_code, user_name)
+@app.post("/message")
+def send_message(message: MessageModel):
+    """Send a message to a room"""
+    # Check if room exists
+    if not r.exists(f"room:{message.room_code}"):
+        raise HTTPException(status_code=404, detail="Room not found")
     
+    # Create message with timestamp
+    timestamp = time.time()
+    message_data = {
+        "type": "message",
+        "sender": message.user_name,
+        "content": message.content,
+        "timestamp": timestamp
+    }
+    
+    # Store message in Redis (expire after 1 hour)
+    message_key = f"message:{message.room_code}:{timestamp}"
+    r.setex(message_key, 3600, json.dumps(message_data))
+    
+    # Also add to in-memory storage for quick polling
+    if message.room_code not in chat_messages:
+        chat_messages[message.room_code] = []
+    
+    chat_messages[message.room_code].append(message_data)
+    
+    # Keep only last 100 messages per room to prevent memory issues
+    if len(chat_messages[message.room_code]) > 100:
+        chat_messages[message.room_code] = chat_messages[message.room_code][-100:]
+    
+    return {"status": "success", "timestamp": timestamp}
+
+@app.post("/join")
+def join_room(join_data: JoinRoomModel):
+    """Join a room and get recent messages"""
+    # Check if room exists
+    if not r.exists(f"room:{join_data.room_code}"):
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Initialize messages list if this is the first user
+    if join_data.room_code not in chat_messages:
+        chat_messages[join_data.room_code] = []
+    
+    # Add system message for user joining
+    system_message = {
+        "type": "system",
+        "content": f"{join_data.user_name} joined the chat",
+        "timestamp": time.time()
+    }
+    chat_messages[join_data.room_code].append(system_message)
+    
+    # Get recent messages (last 20)
+    recent_messages = chat_messages[join_data.room_code][-20:] if chat_messages[join_data.room_code] else []
+    
+    return {
+        "status": "joined",
+        "recent_messages": recent_messages
+    }
+
+@app.get("/messages/{room_code}")
+def get_messages(room_code: str, last_timestamp: float = 0):
+    """Get new messages since last timestamp"""
+    # Check if room exists
+    if not r.exists(f"room:{room_code}"):
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    if room_code not in chat_messages:
+        return {"messages": []}
+    
+    # Filter messages newer than last_timestamp
+    new_messages = [
+        msg for msg in chat_messages[room_code] 
+        if msg["timestamp"] > last_timestamp
+    ]
+    
+    return {"messages": new_messages}
+
+@app.post("/leave")
+def leave_room(leave_data: JoinRoomModel):
+    """User leaves a room"""
+    if leave_data.room_code in chat_messages:
+        system_message = {
+            "type": "system",
+            "content": f"{leave_data.user_name} left the chat",
+            "timestamp": time.time()
+        }
+        chat_messages[leave_data.room_code].append(system_message)
+    
+    return {"status": "left"}
+
+@app.delete("/room/{room_code}")
+def delete_room(room_code: str):
+    """Delete a room (admin function)"""
+    if r.exists(f"room:{room_code}"):
+        r.delete(f"room:{room_code}")
+        if room_code in chat_messages:
+            del chat_messages[room_code]
+        return {"status": "deleted"}
+    else:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint"""
     try:
-        while True:
-            # Wait for messages from the client
-            data = await websocket.receive_text()
-            # Broadcast the message to everyone in the room
-            await manager.broadcast(room_code, data, user_name)
-    except WebSocketDisconnect:
-        # Handle disconnection
-        user_name = manager.disconnect(websocket, room_code)
-        await manager.broadcast_system_message(room_code, f"{user_name} left the chat")
+        # Test Redis connection
+        r.ping()
+        return {
+            "status": "healthy",
+            "redis": "connected",
+            "rooms_count": len(chat_messages),
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Redis connection failed: {str(e)}")
+
+# Background task to clean up expired rooms
+@app.on_event("startup")
+async def startup_event():
+    """Initialize on startup"""
+    print("Chat Room Backend started successfully!")
+    print(f"Frontend URL: {frontend_url}")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on shutdown"""
+    print("Shutting down Chat Room Backend")
