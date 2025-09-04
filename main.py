@@ -2,6 +2,8 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, EmailStr
 import redis
 import os
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # ---------------------------
 # Redis connection
@@ -21,6 +23,14 @@ r = redis.Redis(
 # FastAPI setup
 # ---------------------------
 app = FastAPI(title="REVER Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # for testing; later restrict to your Netlify/Render frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------
 # Models
