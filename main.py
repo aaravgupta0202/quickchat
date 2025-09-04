@@ -1,23 +1,21 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, EmailStr
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import redis
 import os
-from fastapi.middleware.cors import CORSMiddleware
-from redis.exceptions import ConnectionError
+import uuid
+import json
+from typing import Dict, List
 
 # ---------------------------
 # Redis connection
 # ---------------------------
-# Use individual environment variables as provided by the user
 redis_host = os.getenv("REDIS_HOST")
 redis_port = os.getenv("REDIS_PORT")
 redis_password = os.getenv("REDIS_PASSWORD")
 
-# Check that all necessary environment variables are set
 if not all([redis_host, redis_port, redis_password]):
-    raise ConnectionError("One or more Redis environment variables are not set. Ensure REDIS_HOST, REDIS_PORT, and REDIS_PASSWORD are configured.")
+    raise ConnectionError("Redis environment variables not set")
 
-# Use the individual variables to connect
 r = redis.Redis(
     host=redis_host,
     port=int(redis_port),
@@ -28,39 +26,86 @@ r = redis.Redis(
 # ---------------------------
 # FastAPI setup
 # ---------------------------
-app = FastAPI(title="REVER Backend")
+app = FastAPI(title="Chat Room Backend")
 
-# Get the frontend URL from an environment variable for security and flexibility
-# Use a default value for local development
-frontend_url = os.getenv("FRONTEND_URL", "https://rever-app.netlify.app")
-
+# CORS configuration
+frontend_url = os.getenv("FRONTEND_URL", "http://localhost:8000")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[frontend_url],  # Use environment variable or default
+    allow_origins=[frontend_url],
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# ---------------------------
-# Models
-# ---------------------------
-class RegisterModel(BaseModel):
-    name: str
-    email: EmailStr
-    password: str
+# Store active WebSocket connections
+class ConnectionManager:
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = {}
+        self.user_names: Dict[str, str] = {}
 
-class LoginModel(BaseModel):
-    email: EmailStr
-    password: str
+    async def connect(self, websocket: WebSocket, room_code: str, user_name: str):
+        await websocket.accept()
+        
+        if room_code not in self.active_connections:
+            self.active_connections[room_code] = []
+            # Store room in Redis with 1-hour expiration
+            r.setex(f"room:{room_code}", 3600, "active")
+        
+        self.active_connections[room_code].append(websocket)
+        # Store user info
+        self.user_names[id(websocket)] = user_name
+        
+        # Notify room that user joined
+        await self.broadcast_system_message(room_code, f"{user_name} joined the chat")
+        
+        return room_code
 
-class UpdateModel(BaseModel):
-    email: EmailStr
-    name: str | None = None
-    password: str | None = None
+    def disconnect(self, websocket: WebSocket, room_code: str):
+        if room_code in self.active_connections and websocket in self.active_connections[room_code]:
+            self.active_connections[room_code].remove(websocket)
+            user_name = self.user_names.get(id(websocket), "Someone")
+            
+            # Remove room if empty
+            if len(self.active_connections[room_code]) == 0:
+                del self.active_connections[room_code]
+                # Remove from Redis
+                r.delete(f"room:{room_code}")
+            
+            # Remove user info
+            if id(websocket) in self.user_names:
+                del self.user_names[id(websocket)]
+            
+            return user_name
 
-class DeleteModel(BaseModel):
-    email: EmailStr
+    async def broadcast(self, room_code: str, message: str, sender_name: str):
+        if room_code in self.active_connections:
+            message_data = {
+                "type": "message",
+                "sender": sender_name,
+                "content": message,
+                "timestamp": os.times().user  # Simple timestamp
+            }
+            for connection in self.active_connections[room_code]:
+                try:
+                    await connection.send_json(message_data)
+                except:
+                    pass
+
+    async def broadcast_system_message(self, room_code: str, message: str):
+        if room_code in self.active_connections:
+            message_data = {
+                "type": "system",
+                "content": message,
+                "timestamp": os.times().user
+            }
+            for connection in self.active_connections[room_code]:
+                try:
+                    await connection.send_json(message_data)
+                except:
+                    pass
+
+manager = ConnectionManager()
 
 # ---------------------------
 # Endpoints
@@ -68,65 +113,34 @@ class DeleteModel(BaseModel):
 
 @app.get("/")
 def root():
-    return {"message": "Backend running successfully 🚀"}
+    return {"message": "Chat Room Backend Running 🚀"}
 
-@app.post("/register")
-def register(user: RegisterModel):
-    print(f"Received a request to register user: {user.email}") # Debugging print statement
+@app.get("/room/{room_code}/exists")
+def check_room_exists(room_code: str):
+    """Check if a room exists"""
+    exists = r.exists(f"room:{room_code}")
+    return {"exists": exists}
+
+@app.post("/room/create")
+def create_room():
+    """Create a new chat room"""
+    room_code = str(uuid.uuid4())[:8].upper()  # Generate a simple 8-character code
+    r.setex(f"room:{room_code}", 3600, "active")  # Room expires after 1 hour
+    return {"room_code": room_code}
+
+# WebSocket endpoint for chat
+@app.websocket("/ws/{room_code}/{user_name}")
+async def websocket_endpoint(websocket: WebSocket, room_code: str, user_name: str):
+    # Connect to the room
+    await manager.connect(websocket, room_code, user_name)
+    
     try:
-        # PING the Redis server to check the connection before proceeding
-        r.ping()
-        if r.exists(user.email):
-            raise HTTPException(status_code=400, detail="User already exists")
-
-        r.hset(user.email, mapping={"name": user.name, "password": user.password})
-        return {"message": "User registered successfully"}
-    except ConnectionError as e:
-        print(f"Redis Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Could not connect to Redis database.")
-
-@app.post("/login")
-def login(user: LoginModel):
-    try:
-        r.ping()
-        if not r.exists(user.email):
-            raise HTTPException(status_code=404, detail="User not found")
-
-        stored_password = r.hget(user.email, "password")
-        if stored_password != user.password:
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-
-        return {"message": "Login successful"}
-    except ConnectionError as e:
-        print(f"Redis Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Could not connect to Redis database.")
-
-@app.post("/update")
-def update(user: UpdateModel):
-    try:
-        r.ping()
-        if not r.exists(user.email):
-            raise HTTPException(status_code=404, detail="User not found")
-
-        if user.name:
-            r.hset(user.email, "name", user.name)
-        if user.password:
-            r.hset(user.email, "password", user.password)
-
-        return {"message": "Account updated successfully"}
-    except ConnectionError as e:
-        print(f"Redis Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Could not connect to Redis database.")
-
-@app.delete("/delete")
-def delete(user: DeleteModel):
-    try:
-        r.ping()
-        if not r.exists(user.email):
-            raise HTTPException(status_code=404, detail="User not found")
-
-        r.delete(user.email)
-        return {"message": "Account deleted successfully"}
-    except ConnectionError as e:
-        print(f"Redis Connection Error: {e}")
-        raise HTTPException(status_code=500, detail="Could not connect to Redis database.")
+        while True:
+            # Wait for messages from the client
+            data = await websocket.receive_text()
+            # Broadcast the message to everyone in the room
+            await manager.broadcast(room_code, data, user_name)
+    except WebSocketDisconnect:
+        # Handle disconnection
+        user_name = manager.disconnect(websocket, room_code)
+        await manager.broadcast_system_message(room_code, f"{user_name} left the chat")
