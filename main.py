@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 import redis
 import os
 import uuid
-import json
 import time
 
 # Redis connection
@@ -29,6 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# In-memory message storage (no database!)
+room_messages = {}
+
 @app.get("/")
 def root():
     return {"message": "Backend is running"}
@@ -36,9 +38,8 @@ def root():
 @app.post("/room/create")
 def create_room():
     room_code = str(uuid.uuid4())[:8].upper()
-    r.setex(f"room:{room_code}", 3600, "active")
-    # Initialize empty messages list
-    r.set(f"messages:{room_code}", json.dumps([]))
+    r.setex(f"room:{room_code}", 3600, "active")  # Only store room existence
+    room_messages[room_code] = []  # Empty messages list
     return {"room_code": room_code}
 
 @app.get("/room/{room_code}/exists")
@@ -51,24 +52,21 @@ def send_message(room_code: str, message: str, user: str):
     if not r.exists(f"room:{room_code}"):
         return {"error": "Room not found"}
     
-    # Get current messages
-    messages_json = r.get(f"messages:{room_code}") or "[]"
-    messages = json.loads(messages_json)
+    if room_code not in room_messages:
+        room_messages[room_code] = []
     
-    # Add new message
+    # Add new message (no database storage!)
     new_message = {
         "user": user,
         "text": message,
         "time": time.time()
     }
-    messages.append(new_message)
+    room_messages[room_code].append(new_message)
     
-    # Keep only last 50 messages
-    if len(messages) > 50:
-        messages = messages[-50:]
+    # Keep only last 50 messages in memory
+    if len(room_messages[room_code]) > 50:
+        room_messages[room_code] = room_messages[room_code][-50:]
     
-    # Save back to Redis
-    r.setex(f"messages:{room_code}", 3600, json.dumps(messages))
     return {"status": "success"}
 
 @app.get("/messages/{room_code}")
@@ -76,6 +74,6 @@ def get_messages(room_code: str):
     if not r.exists(f"room:{room_code}"):
         return {"error": "Room not found"}
     
-    messages_json = r.get(f"messages:{room_code}") or "[]"
-    messages = json.loads(messages_json)
+    # Return messages from memory, not database
+    messages = room_messages.get(room_code, [])
     return {"messages": messages}
