@@ -33,7 +33,7 @@ app.add_middleware(
 # In-memory storage
 room_messages: Dict[str, List[Dict]] = {}
 typing_users: Dict[str, Set[str]] = {}
-active_users: Dict[str, Set[str]] = {}  # Track active users in each room
+active_users: Dict[str, Set[str]] = {}
 room_creation_times: Dict[str, float] = {}
 
 def add_system_message(room_code: str, text: str):
@@ -185,30 +185,33 @@ def get_room_info(room_code: str):
         "exists": True,
         "time_remaining": get_time_remaining(room_code),
         "user_count": len(active_users.get(room_code, set())),
-        "message_count": len(user_messages)
+        "message_count": len(user_messages),
+        "active_users": list(active_users.get(room_code, set()))
     }
 
-@app.get("/active-users/{room_code}")
-def get_active_users(room_code: str):
-    """Get currently active users in room"""
+# New endpoint for chat name management
+@app.get("/room/{room_code}/name")
+def get_room_name(room_code: str):
+    """Get the chat room name"""
     if not r.exists(f"room:{room_code}"):
         raise HTTPException(status_code=404, detail="Room not found")
     
-    return {"active_users": list(active_users.get(room_code, set()))}
+    chat_name = r.get(f"room:{room_code}:name") or "New Chat"
+    return {"chat_name": chat_name}
 
-# Background task to clean up inactive users
-def cleanup_inactive_users():
-    """Periodically remove users who haven't been active for a while"""
-    while True:
-        time.sleep(30)  # Check every 30 seconds
-        current_time = time.time()
-        for room_code, users in list(active_users.items()):
-            # In a real implementation, you'd track last activity time per user
-            # For simplicity, we'll just keep the current logic
-            pass
-
-# Start cleanup thread
-threading.Thread(target=cleanup_inactive_users, daemon=True).start()
+@app.post("/room/{room_code}/name")
+def set_room_name(room_code: str, user: str, chat_name: str):
+    """Set the chat room name and notify everyone"""
+    if not r.exists(f"room:{room_code}"):
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    # Store in Redis database
+    r.setex(f"room:{room_code}:name", 3600, chat_name)
+    
+    # Add system message about name change
+    add_system_message(room_code, f"<b>{user}</b> changed the chat name to \"<b>{chat_name}</b>\"")
+    
+    return {"status": "success", "chat_name": chat_name}
 
 if __name__ == "__main__":
     import uvicorn
