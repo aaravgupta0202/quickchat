@@ -151,7 +151,8 @@ def create_room(db: Session = Depends(get_db)):
     db.add(new_room)
     db.commit()
     
-    active_users[room_code] = set()
+    active_users[room_code] = {}
+    typing_users[room_code] = set()
     return {"room_code": room_code}
 
 @app.get("/room/{room_code}/exists")
