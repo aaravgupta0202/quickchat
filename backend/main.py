@@ -55,7 +55,8 @@ app = FastAPI()
 
 # Encryption Setup
 # Use a static fallback key for local dev if not provided, but it's highly recommended to set one.
-ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "bW9ja19rZXlfZm9yX2xvY2FsX2RldmVsb3BtZW50XzEyMw==")
+# MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI= is base64 for '12345678901234567890123456789012' (32 bytes)
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=")
 fernet = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
 
 def encrypt_message(text: str) -> str:
