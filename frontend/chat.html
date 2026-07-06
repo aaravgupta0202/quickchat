@@ -184,7 +184,8 @@
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-full shadow-lg text-sm font-medium transition-all duration-300 transform -translate-y-full opacity-0 z-[60]"></div>
 
     <script>
-        const backend = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? "http://localhost:8000" : "/api";
+        // Point directly to the Render backend
+        const backend = "https://sample-ii6m.onrender.com";
         const roomCode = new URLSearchParams(window.location.search).get('room');
         let userName = localStorage.getItem('userName');
 

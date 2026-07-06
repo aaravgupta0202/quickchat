@@ -180,10 +180,8 @@
     </div>
 
     <script>
-        // Use /api in production (via Netlify proxy), but fallback to local for dev
-        const backend = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-            ? "http://localhost:8000" 
-            : "/api";
+        // Since there is no proxy, point directly to the Render backend
+        const backend = "https://sample-ii6m.onrender.com";
             
         let pendingAction = null;
         
