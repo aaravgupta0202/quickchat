@@ -184,6 +184,16 @@
         <button onclick="document.getElementById('iosInstallModal').classList.add('translate-y-full')" class="w-full bg-border hover:bg-borderhover text-white py-3 rounded-lg font-medium transition-colors">Got it</button>
     </div>
 
+    <!-- Android/PC Install Modal -->
+    <div id="androidInstallModal" class="fixed inset-x-0 bottom-0 bg-surface rounded-t-xl p-6 z-50 transform translate-y-full transition-transform duration-300 border-t border-border shadow-2xl flex flex-col items-center text-center">
+        <h3 class="text-white font-semibold mb-2 text-lg">Install QuickChat</h3>
+        <p class="text-muted text-sm mb-4">Install our lightweight app to your home screen for the best full-screen chat experience.</p>
+        <div class="flex w-full gap-3">
+            <button onclick="document.getElementById('androidInstallModal').classList.add('translate-y-full')" class="flex-1 bg-surface border border-border hover:bg-border text-white py-3 rounded-lg font-medium transition-colors">Not Now</button>
+            <button id="androidInstallBtn" class="flex-1 bg-white text-black py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">Install App</button>
+        </div>
+    </div>
+
     <script>
         const backend = "https://sample-ii6m.onrender.com";
             
@@ -215,6 +225,29 @@
                 setTimeout(() => {
                     document.getElementById('iosInstallModal').classList.remove('translate-y-full');
                 }, 1500);
+            }
+        });
+
+        // Android/Desktop Custom Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            deferredPrompt = e;
+            
+            // Show our custom prompt slightly delayed
+            setTimeout(() => {
+                document.getElementById('androidInstallModal').classList.remove('translate-y-full');
+            }, 1000);
+        });
+
+        document.getElementById('androidInstallBtn').addEventListener('click', async () => {
+            document.getElementById('androidInstallModal').classList.add('translate-y-full');
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
             }
         });
         
