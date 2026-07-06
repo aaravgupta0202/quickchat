@@ -38,12 +38,9 @@
 
     <!-- Navigation -->
     <nav class="relative z-10 w-full p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 max-w-6xl mx-auto">
-        <div class="flex flex-col">
-            <div class="flex items-center gap-3 text-xl font-semibold tracking-tight text-white">
-                <img src="icon-192.png" alt="QuickChat Logo" class="w-8 h-8 rounded-md shrink-0 border border-border">
-                QuickChat
-            </div>
-            <span class="text-[11px] text-muted font-light ml-[44px] -mt-1">Made by Aarav Gupta</span>
+        <div class="flex items-center gap-3 text-xl font-semibold tracking-tight text-white">
+            <img src="icon-192.png" alt="QuickChat Logo" class="w-8 h-8 rounded-md shrink-0 border border-border">
+            QuickChat
         </div>
         <div class="flex items-center gap-4">
             <button onclick="showAbout()" class="text-sm font-medium text-muted hover:text-white transition-colors whitespace-nowrap">
@@ -110,9 +107,14 @@
     <footer class="relative z-10 w-full border-t border-border bg-base/80 backdrop-blur-md py-6 mt-12">
         <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <!-- Left Side -->
-            <div class="flex items-center gap-2 font-medium text-lg tracking-tight text-white">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                QuickChat
+            <div class="flex flex-col">
+                <div class="flex items-center gap-2 font-medium text-lg tracking-tight text-white">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    QuickChat
+                </div>
+                <div class="text-xs text-muted font-light mt-1 text-left ml-[28px]">
+                    Made by Aarav Gupta
+                </div>
             </div>
 
             <!-- Right Side (Pill Buttons) -->
