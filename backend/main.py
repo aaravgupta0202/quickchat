@@ -216,7 +216,7 @@ def get_messages(room_code: str, db: Session = Depends(get_db)):
         # filter users who haven't sent a heartbeat in 15 seconds
         room_active_users = [u for u, t in active_users[room_code].items() if current_time - t < 15]
 
-    return {"messages": decrypted_messages, "active_users": room_active_users}
+    return {"messages": decrypted_messages, "active_users": room_active_users, "chat_name": room.chat_name}
 
 @app.post("/message/{room_code}")
 def post_message(room_code: str, message: str, user: str, db: Session = Depends(get_db)):
