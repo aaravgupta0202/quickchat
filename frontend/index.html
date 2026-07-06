@@ -32,13 +32,13 @@
     <div class="fixed inset-0 z-0 pointer-events-none" style="background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; mask-image: linear-gradient(to bottom, white 0%, transparent 80%); -webkit-mask-image: linear-gradient(to bottom, white 0%, transparent 80%);"></div>
 
     <!-- Navigation -->
-    <nav class="relative z-10 w-full p-6 flex justify-between items-center max-w-6xl mx-auto">
+    <nav class="relative z-10 w-full p-4 md:p-6 flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-0 max-w-6xl mx-auto">
         <div class="flex items-center gap-2 text-xl font-semibold tracking-tight text-white">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            <svg class="w-6 h-6 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
             QuickChat
         </div>
         <div class="flex items-center gap-4">
-            <button onclick="showAbout()" class="text-sm font-medium text-muted hover:text-white transition-colors">
+            <button onclick="showAbout()" class="text-sm font-medium text-muted hover:text-white transition-colors whitespace-nowrap">
                 How it works
             </button>
             <a href="https://github.com/aaravgupta0202/quickchat" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-md bg-white text-black text-sm font-medium hover:bg-gray-200 transition-colors">
@@ -49,8 +49,8 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="relative z-10 flex-grow flex flex-col items-center justify-center p-6 w-full max-w-6xl mx-auto">
-        <div class="text-center mb-16 max-w-3xl animate-fade-in-up">
+    <main class="relative z-10 flex-grow flex flex-col items-center justify-center p-4 md:p-6 w-full max-w-6xl mx-auto mt-4 md:mt-0">
+        <div class="text-center mb-8 md:mb-16 max-w-3xl animate-fade-in-up">
             <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter leading-tight text-white">
                 Instant messaging.<br>
                 <span class="text-muted">Zero persistence.</span>
