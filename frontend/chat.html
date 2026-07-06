@@ -19,13 +19,13 @@
             extend: {
                 fontFamily: { sans: ['Inter', 'sans-serif'] },
                 colors: {
-                    base: '#000000',
-                    surface: '#0a0a0a',
-                    elevated: '#111111',
-                    border: '#262626',
-                    borderhover: '#404040',
-                    text: '#ededed',
-                    muted: '#a1a1aa'
+                    base: 'var(--color-base, #000000)',
+                    surface: 'var(--color-surface, #0a0a0a)',
+                    elevated: 'var(--color-elevated, #111111)',
+                    border: 'var(--color-border, #262626)',
+                    borderhover: 'var(--color-borderhover, #404040)',
+                    text: 'var(--color-text, #ededed)',
+                    muted: 'var(--color-muted, #a1a1aa)'
                 }
             }
         }
@@ -41,26 +41,26 @@
         font-size: 0.95rem;
     }
     .bubble-you {
-        background: #ededed;
-        color: #000000;
+        background: var(--color-text, #ededed);
+        color: var(--color-base, #000000);
         border-radius: 12px;
         border-bottom-right-radius: 2px;
     }
     .bubble-other {
-        background: #111111;
-        border: 1px solid #262626;
-        color: #ededed;
+        background: var(--color-elevated, #111111);
+        border: 1px solid var(--color-border, #262626);
+        color: var(--color-text, #ededed);
         border-radius: 12px;
         border-bottom-left-radius: 2px;
     }
     .bubble-system {
-        background: #111111;
-        color: #a1a1aa;
+        background: var(--color-elevated, #111111);
+        color: var(--color-muted, #a1a1aa);
         font-size: 0.8rem;
         padding: 4px 10px;
         border-radius: 6px;
         margin: 0 auto;
-        border: 1px solid #262626;
+        border: 1px solid var(--color-border, #262626);
     }
     .msg-time { font-size: 0.7rem; opacity: 0.6; margin-top: 4px; text-align: right; }
 </style>
@@ -88,7 +88,9 @@
             </div>
             <!-- Header Right -->
             <div class="flex items-center gap-3">
-                <input type="color" id="themeColorPicker" class="w-6 h-6 cursor-pointer border-0 p-0 bg-transparent rounded-full overflow-hidden" title="Customize Accent Color">
+                <button onclick="openThemeModal()" class="p-2 rounded-md hover:bg-elevated transition-colors text-text" title="Customize Theme">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                </button>
                 <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-elevated border border-border text-sm">
                     <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                     <span id="userCount">1 online</span>
@@ -163,6 +165,37 @@
         </div>
     </div>
 
+    <!-- Theme Modal -->
+    <div id="themeModal" class="fixed inset-0 bg-base/90 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="surface-elevated rounded-xl p-6 m-4 max-w-sm w-full transform scale-95 transition-transform duration-300" id="themeModalContent">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-semibold text-white">Customize Theme</h3>
+                <button onclick="closeThemeModal()" class="text-muted hover:text-white"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex justify-between items-center py-2 border-b border-border">
+                    <span class="text-sm font-medium text-text">Accent Color</span>
+                    <input type="color" id="themeAccent" class="w-8 h-8 cursor-pointer bg-transparent border-0 rounded-md">
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-border">
+                    <span class="text-sm font-medium text-text">Text Color</span>
+                    <input type="color" id="themeText" class="w-8 h-8 cursor-pointer bg-transparent border-0 rounded-md">
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-border">
+                    <span class="text-sm font-medium text-text">Background Color</span>
+                    <input type="color" id="themeBase" class="w-8 h-8 cursor-pointer bg-transparent border-0 rounded-md">
+                </div>
+                <div class="flex justify-between items-center py-2 border-b border-border">
+                    <span class="text-sm font-medium text-text">Surface Color</span>
+                    <input type="color" id="themeSurface" class="w-8 h-8 cursor-pointer bg-transparent border-0 rounded-md">
+                </div>
+            </div>
+            
+            <button onclick="resetTheme()" class="w-full mt-6 py-2 rounded-lg bg-border hover:bg-borderhover text-text transition-colors text-sm font-medium">Reset to Default</button>
+        </div>
+    </div>
+
     <!-- Name Modal -->
     <div id="nameModal" class="fixed inset-0 bg-base/90 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
         <div class="surface-elevated rounded-xl p-6 m-4 max-w-sm w-full transform scale-95 transition-transform duration-300" id="nameModalContent">
@@ -223,7 +256,7 @@
 
         // Escaping HTML
         function escapeHtml(unsafe) {
-            return unsafe
+            return String(unsafe || "")
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
@@ -251,6 +284,8 @@
         function closeInfoModal() { toggleModal('infoModal', 'infoModalContent', false); }
         function openNameModal() { document.getElementById('newChatNameInput').value = savedChatName; toggleModal('nameModal', 'nameModalContent', true); document.getElementById('newChatNameInput').focus(); }
         function closeNameModal() { toggleModal('nameModal', 'nameModalContent', false); }
+        function openThemeModal() { toggleModal('themeModal', 'themeModalContent', true); }
+        function closeThemeModal() { toggleModal('themeModal', 'themeModalContent', false); }
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -416,25 +451,70 @@
         }
 
         // Theme Color Setup
-        const colorPicker = document.getElementById('themeColorPicker');
-        
-        function setAccentColor(color) {
-            document.documentElement.style.setProperty('--accent-color', color);
-            colorPicker.value = color;
+        const defaultTheme = {
+            '--color-base': '#000000',
+            '--color-surface': '#0a0a0a',
+            '--color-elevated': '#111111',
+            '--color-border': '#262626',
+            '--color-borderhover': '#404040',
+            '--color-text': '#ededed',
+            '--color-muted': '#a1a1aa',
+            '--accent-color': '#ffffff'
+        };
+
+        function applyTheme(theme) {
+            for (const [key, value] of Object.entries(theme)) {
+                document.documentElement.style.setProperty(key, value);
+            }
+            document.getElementById('themeAccent').value = theme['--accent-color'] || defaultTheme['--accent-color'];
+            document.getElementById('themeText').value = theme['--color-text'] || defaultTheme['--color-text'];
+            document.getElementById('themeBase').value = theme['--color-base'] || defaultTheme['--color-base'];
+            document.getElementById('themeSurface').value = theme['--color-surface'] || defaultTheme['--color-surface'];
         }
 
-        // Load saved color for this room
-        const savedColor = localStorage.getItem(`roomColor_${roomCode}`);
-        if (savedColor) {
-            setAccentColor(savedColor);
+        function saveTheme() {
+            const theme = {
+                '--accent-color': document.getElementById('themeAccent').value,
+                '--color-text': document.getElementById('themeText').value,
+                '--color-base': document.getElementById('themeBase').value,
+                '--color-surface': document.getElementById('themeSurface').value,
+                '--color-elevated': adjustColor(document.getElementById('themeSurface').value, 5),
+                '--color-border': adjustColor(document.getElementById('themeSurface').value, 15),
+                '--color-borderhover': adjustColor(document.getElementById('themeSurface').value, 25),
+                '--color-muted': adjustColor(document.getElementById('themeText').value, -40)
+            };
+            applyTheme(theme);
+            localStorage.setItem(`customTheme_${roomCode}`, JSON.stringify(theme));
+        }
+
+        function resetTheme() {
+            localStorage.removeItem(`customTheme_${roomCode}`);
+            applyTheme(defaultTheme);
+            closeThemeModal();
+        }
+
+        function adjustColor(col, amt) {
+            let usePound = false;
+            if (col[0] == "#") { col = col.slice(1); usePound = true; }
+            let num = parseInt(col,16);
+            let r = (num >> 16) + amt;
+            if (r > 255) r = 255; else if (r < 0) r = 0;
+            let b = ((num >> 8) & 0x00FF) + amt;
+            if (b > 255) b = 255; else if (b < 0) b = 0;
+            let g = (num & 0x0000FF) + amt;
+            if (g > 255) g = 255; else if (g < 0) g = 0;
+            return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).toString(16)).slice(-6);
+        }
+
+        const savedThemeStr = localStorage.getItem(`customTheme_${roomCode}`);
+        if (savedThemeStr) {
+            try { applyTheme(JSON.parse(savedThemeStr)); } catch (e) { applyTheme(defaultTheme); }
         } else {
-            setAccentColor('#ffffff'); // Default
+            applyTheme(defaultTheme);
         }
 
-        colorPicker.addEventListener('input', (e) => {
-            const color = e.target.value;
-            setAccentColor(color);
-            localStorage.setItem(`roomColor_${roomCode}`, color);
+        ['themeAccent', 'themeText', 'themeBase', 'themeSurface'].forEach(id => {
+            document.getElementById(id).addEventListener('input', saveTheme);
         });
 
         // Speech to Text

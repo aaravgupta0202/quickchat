@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="frontend/icon-192.png" alt="QuickChat Logo" width="128" style="border-radius: 20%;" />
+</p>
+
 # QuickChat
 
 QuickChat is a modern, premium, and temporary chat application. Rooms automatically expire after 1 hour, making it perfect for quick, disposable conversations without the hassle of permanent data storage.
@@ -27,8 +31,8 @@ QuickChat is a modern, premium, and temporary chat application. Rooms automatica
 
 ## Deployment
 
-### Frontend (Netlify)
-Deploy the root repository to Netlify. The `netlify.toml` file automatically sets the publish directory to `frontend` and proxies `/api` requests to your backend URL.
+### Frontend (Static or Any Host)
+Deploy the `frontend` folder to any static hosting provider (e.g. GitHub Pages, Vercel, Cloudflare Pages). Just ensure `backend` variable in JS points to your Render URL.
 
 ### Backend (Render)
 Deploy the `backend` directory as a Web Service on Render.
