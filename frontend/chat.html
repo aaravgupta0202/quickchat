@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ededed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'></path></svg>" type="image/svg+xml">
+<link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=QC&background=000&color=fff&size=192">
 <title>QuickChat | Room</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -63,7 +68,7 @@
 <body class="bg-base text-text h-[100dvh] overflow-hidden flex flex-col font-sans selection:bg-white selection:text-black">
     
     <!-- App Container -->
-    <div class="relative z-10 flex flex-col h-full w-full max-w-5xl mx-auto bg-base md:my-4 md:rounded-xl md:h-[calc(100dvh-2rem)] md:border md:border-border overflow-hidden">
+    <div class="relative z-10 flex flex-col h-[100dvh] w-full bg-base overflow-hidden">
         
         <!-- Header -->
         <header class="flex items-center justify-between p-4 border-b border-border bg-surface shrink-0">
@@ -81,11 +86,12 @@
                     </div>
                 </div>
             </div>
-            
-            <div class="flex items-center gap-2">
-                <div class="hidden md:flex items-center gap-2 text-xs text-muted mr-2 bg-elevated px-3 py-1.5 rounded-md border border-border">
-                    <span class="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-                    <span id="userCount">1</span> online
+            <!-- Header Right -->
+            <div class="flex items-center gap-3">
+                <input type="color" id="themeColorPicker" class="w-6 h-6 cursor-pointer border-0 p-0 bg-transparent rounded-full overflow-hidden" title="Customize Accent Color">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-elevated border border-border text-sm">
+                    <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                    <span id="userCount">1 online</span>
                 </div>
                 <button onclick="openInfoModal()" class="p-2 rounded-md bg-elevated border border-border hover:bg-border transition-colors text-text" title="Room Info">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -102,19 +108,19 @@
         <div id="typingIndicator" class="px-6 py-2 text-xs text-muted font-light hidden bg-base"></div>
 
         <!-- Composer -->
-        <div class="p-4 bg-surface border-t border-border shrink-0">
-            <form id="chatForm" class="flex items-center gap-3 w-full max-w-4xl mx-auto" onsubmit="sendMessage(event)">
+        <div class="p-2 sm:p-4 bg-surface border-t border-border shrink-0">
+            <form id="chatForm" class="flex items-center gap-2 sm:gap-3 w-full max-w-4xl mx-auto" onsubmit="sendMessage(event)">
                 <input 
                     type="text" 
                     id="messageInput" 
-                    class="flex-1 bg-elevated border border-border rounded-lg px-4 py-3 text-base text-text placeholder-borderhover focus:outline-none focus:border-text transition-all"
+                    class="flex-1 min-w-0 bg-elevated border border-border rounded-lg px-3 py-3 sm:px-4 text-white placeholder-borderhover focus:outline-none focus:border-text transition-all"
                     placeholder="Type a message..."
                     autocomplete="off"
                 >
                 <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="p-3 rounded-lg bg-surface border border-border hover:bg-border text-text transition-colors flex-shrink-0" title="Speech to text">
                     <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                 </button>
-                <button type="submit" id="sendBtn" class="p-3 rounded-lg bg-white hover:bg-gray-200 text-black transition-colors disabled:opacity-50 flex-shrink-0">
+                <button type="submit" id="sendBtn" class="p-3 rounded-lg text-black transition-colors disabled:opacity-50 flex-shrink-0" style="background-color: var(--accent-color, #ffffff);">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
             </form>
@@ -172,13 +178,39 @@
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 bg-white text-black px-4 py-2 rounded-md shadow-lg text-sm font-medium transition-all duration-300 transform -translate-y-full opacity-0 z-[60]"></div>
 
+    <!-- Device Limit Modal -->
+    <div id="multiTabError" class="fixed inset-0 bg-base/95 backdrop-blur-sm flex flex-col items-center justify-center z-[100] hidden">
+        <svg class="w-16 h-16 text-red-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+        <h2 class="text-3xl font-bold text-white mb-2 tracking-tight text-center">Room Already Open</h2>
+        <p class="text-muted text-center max-w-sm mb-8">You are already in this chat room in another tab or window on this device. Please use that tab.</p>
+        <a href="index.html" class="px-6 py-3 bg-white text-black rounded-lg font-medium hover:bg-gray-200 transition-colors">Return Home</a>
+    </div>
+
     <script>
         const backend = "https://sample-ii6m.onrender.com";
         const roomCode = new URLSearchParams(window.location.search).get('room');
         let userName = localStorage.getItem('userName');
+        let deviceId = localStorage.getItem('deviceId');
 
         if (!roomCode || !userName) {
             window.location.href = 'index.html';
+        }
+
+        // Multi-tab check (BroadcastChannel)
+        const bc = new BroadcastChannel('quickchat_room_' + roomCode);
+        bc.postMessage('ping');
+        bc.onmessage = (event) => {
+            if (event.data === 'ping') {
+                bc.postMessage('pong'); // Tell new tab we are here
+            } else if (event.data === 'pong') {
+                // We are the new tab, and an existing tab responded
+                document.getElementById('multiTabError').classList.remove('hidden');
+            }
+        };
+
+        // PWA Setup
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(console.error);
         }
 
         document.getElementById('roomDisplay').textContent = roomCode;
@@ -279,7 +311,7 @@
 
         // Typing
         document.getElementById('messageInput').addEventListener('input', () => {
-            fetch(`${backend}/typing/${roomCode}?user=${encodeURIComponent(userName)}`, { method: 'POST' }).catch(() => {});
+            fetch(`${backend}/typing/${roomCode}?user=${encodeURIComponent(userName)}&deviceId=${deviceId}`, { method: 'POST' }).catch(() => {});
         });
 
         setInterval(async () => {
@@ -309,7 +341,7 @@
             input.disabled = true;
             btn.disabled = true;
             try {
-                await fetch(`${backend}/message/${roomCode}?message=${encodeURIComponent(msg)}&user=${encodeURIComponent(userName)}`, { method: 'POST' });
+                await fetch(`${backend}/message/${roomCode}?message=${encodeURIComponent(msg)}&user=${encodeURIComponent(userName)}&deviceId=${deviceId}`, { method: 'POST' });
                 input.value = '';
                 fetchMessages();
             } catch (err) {}
@@ -321,9 +353,13 @@
         let lastMessageCount = 0;
         async function fetchMessages() {
             try {
-                const res = await fetch(`${backend}/messages/${roomCode}`);
-                if (!res.ok) return;
+                const res = await fetch(`${backend}/messages/${roomCode}?deviceId=${deviceId}`);
                 const data = await res.json();
+                if (data.error === 'device_limit') {
+                    document.getElementById('multiTabError').classList.remove('hidden');
+                    channel.postMessage('duplicate');
+                    return;
+                }
                 if (data.messages && data.messages.length !== lastMessageCount) {
                     lastMessageCount = data.messages.length;
                     renderMessages(data.messages);
@@ -339,8 +375,7 @@
             msgs.forEach(m => {
                 const time = new Date(m.time * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 if (m.user === 'System') {
-                    // Re-parse system messages to convert bold tags properly for this new aesthetic if needed.
-                    let safeText = m.text; // System messages are trusted html internally
+                    let safeText = m.text;
                     container.innerHTML += `<div class="flex justify-center w-full my-2"><div class="bubble-system">${safeText}</div></div>`;
                 } else if (m.user === userName) {
                     container.innerHTML += `<div class="flex justify-end w-full pl-12"><div class="chat-bubble bubble-you">
@@ -360,6 +395,28 @@
                 container.scrollTop = container.scrollHeight;
             }
         }
+
+        // Theme Color Setup
+        const colorPicker = document.getElementById('themeColorPicker');
+        
+        function setAccentColor(color) {
+            document.documentElement.style.setProperty('--accent-color', color);
+            colorPicker.value = color;
+        }
+
+        // Load saved color for this room
+        const savedColor = localStorage.getItem(`roomColor_${ROOM_CODE}`);
+        if (savedColor) {
+            setAccentColor(savedColor);
+        } else {
+            setAccentColor('#ffffff'); // Default
+        }
+
+        colorPicker.addEventListener('input', (e) => {
+            const color = e.target.value;
+            setAccentColor(color);
+            localStorage.setItem(`roomColor_${ROOM_CODE}`, color);
+        });
 
         // Speech to Text
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

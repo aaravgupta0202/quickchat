@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0a0a0a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ededed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'></path></svg>" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="https://ui-avatars.com/api/?name=QC&background=000&color=fff&size=192">
     <title>QuickChat | Instant Temporary Messaging</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -172,10 +177,46 @@
         </div>
     </div>
 
+    <!-- iOS Install Modal -->
+    <div id="iosInstallModal" class="fixed inset-x-0 bottom-0 bg-surface rounded-t-xl p-6 z-50 transform translate-y-full transition-transform duration-300 border-t border-border shadow-2xl flex flex-col items-center text-center">
+        <h3 class="text-white font-semibold mb-2 text-lg">Install QuickChat</h3>
+        <p class="text-muted text-sm mb-4">Tap the <svg class="inline w-5 h-5 mx-1 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg> icon below and select <br> <span class="font-semibold text-white">Add to Home Screen</span></p>
+        <button onclick="document.getElementById('iosInstallModal').classList.add('translate-y-full')" class="w-full bg-border hover:bg-borderhover text-white py-3 rounded-lg font-medium transition-colors">Got it</button>
+    </div>
+
     <script>
         const backend = "https://sample-ii6m.onrender.com";
             
         let pendingAction = null;
+
+        // Ensure unique device ID
+        if (!localStorage.getItem('deviceId')) {
+            localStorage.setItem('deviceId', 'device_' + Math.random().toString(36).substr(2, 9));
+        }
+
+        // PWA & Initialization
+        window.addEventListener('load', () => {
+            // Register Service Worker
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').catch(console.error);
+            }
+
+            // Restore username
+            const cachedName = localStorage.getItem('userName');
+            if (cachedName) {
+                document.getElementById('userName').value = cachedName;
+                document.getElementById('modalUserName').value = cachedName;
+            }
+
+            // iOS Install Prompt Check
+            const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+            const isInStandaloneMode = ('standalone' in window.navigator) && window.navigator.standalone;
+            if (isIos && !isInStandaloneMode) {
+                setTimeout(() => {
+                    document.getElementById('iosInstallModal').classList.remove('translate-y-full');
+                }, 1500);
+            }
+        });
         
         function showModal(modalId, contentId) {
             const modal = document.getElementById(modalId);
