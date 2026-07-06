@@ -211,7 +211,7 @@
         window.addEventListener('load', () => {
             // Register Service Worker
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('./sw.js').catch(console.error);
+                navigator.serviceWorker.register('./sw.js?v=' + new Date().getTime()).catch(console.error);
             }
 
             // Restore username

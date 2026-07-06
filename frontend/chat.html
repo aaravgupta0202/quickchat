@@ -241,9 +241,9 @@
             }
         };
 
-        // PWA Setup
+        // Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js').catch(console.error);
+            navigator.serviceWorker.register('./sw.js?v=' + new Date().getTime()).catch(console.error);
         }
 
         document.getElementById('roomDisplay').textContent = roomCode;
@@ -582,6 +582,11 @@
             setInterval(fetchMessages, 2000); // Polling every 2s
             setInterval(sendHeartbeat, 10000); // Heartbeat every 10s
             sendHeartbeat();
+        });
+        
+        document.getElementById('sendBtn').addEventListener('click', sendMessage);
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendMessage(e);
         });
         
         // Handle window close
