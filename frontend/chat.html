@@ -600,9 +600,14 @@
             if (e.key === 'Enter') sendMessage(e);
         });
         
-        // Handle window close
-        window.addEventListener('beforeunload', () => {
-            navigator.sendBeacon(`${backend}/leave/${roomCode}?user=${encodeURIComponent(userName)}`);
+        // Handle tab visibility and closures (works 100% on mobile)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                navigator.sendBeacon(`${backend}/leave/${roomCode}?user=${encodeURIComponent(userName)}`);
+            } else if (document.visibilityState === 'visible') {
+                fetch(`${backend}/join/${roomCode}?user=${encodeURIComponent(userName)}`, { method: 'POST' }).catch(() => {});
+                sendHeartbeat();
+            }
         });
     </script>
 </body>

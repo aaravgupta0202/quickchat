@@ -213,8 +213,16 @@ def get_messages(room_code: str, db: Session = Depends(get_db)):
     current_time = time.time()
     room_active_users = []
     if room_code in active_users:
-        # filter users who haven't sent a heartbeat in 15 seconds
-        room_active_users = [u for u, t in active_users[room_code].items() if current_time - t < 15]
+        to_remove = []
+        for u, t in active_users[room_code].items():
+            if current_time - t >= 15:
+                to_remove.append(u)
+            else:
+                room_active_users.append(u)
+                
+        for u in to_remove:
+            del active_users[room_code][u]
+            add_system_message(db, room_code, f"<b>{u}</b> left the chat")
 
     return {"messages": decrypted_messages, "active_users": room_active_users, "chat_name": room.chat_name}
 
