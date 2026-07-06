@@ -574,11 +574,15 @@
             }
         }
 
-        setInterval(fetchMessages, 2000);
-        fetchMessages(); // Initial fetch
-        
-        // Initial join call
-        fetch(`${backend}/join/${roomCode}?user=${encodeURIComponent(userName)}`, { method: 'POST' }).catch(()=>{});
+        window.addEventListener('load', () => {
+            // Register Join
+            fetch(`${backend}/join/${roomCode}?user=${encodeURIComponent(userName)}`, { method: 'POST' }).catch(() => {});
+
+            fetchMessages();
+            setInterval(fetchMessages, 2000); // Polling every 2s
+            setInterval(sendHeartbeat, 10000); // Heartbeat every 10s
+            sendHeartbeat();
+        });
         
         // Handle window close
         window.addEventListener('beforeunload', () => {
