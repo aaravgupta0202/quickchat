@@ -7,6 +7,8 @@ import threading
 from typing import Dict, Set, List
 from sqlalchemy import create_engine, Column, String, Float, Integer
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from cryptography.fernet import Fernet, InvalidToken
+import base64
 
 # Database setup
 # SQLite fallback is used for local development when DATABASE_URL is not set.
@@ -51,6 +53,21 @@ def get_db():
 # FastAPI setup
 app = FastAPI()
 
+# Encryption Setup
+# Use a static fallback key for local dev if not provided, but it's highly recommended to set one.
+ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY", "bW9ja19rZXlfZm9yX2xvY2FsX2RldmVsb3BtZW50XzEyMw==")
+fernet = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
+
+def encrypt_message(text: str) -> str:
+    return fernet.encrypt(text.encode()).decode()
+
+def decrypt_message(encrypted_text: str) -> str:
+    try:
+        return fernet.decrypt(encrypted_text.encode()).decode()
+    except (InvalidToken, Exception):
+        # Fallback for old unencrypted messages or if key changes
+        return encrypted_text
+
 # CORS Security setup
 # Get the allowed origin from the .env file. 
 # In production, this should be your exact Netlify domain (e.g., https://my-quickchat.netlify.app)
@@ -79,7 +96,8 @@ active_users: Dict[str, Set[str]] = {}
 
 def add_system_message(db: Session, room_code: str, text: str):
     """Add system message to room."""
-    msg = Message(room_code=room_code, user_name="System", text=text, time=time.time())
+    encrypted_text = encrypt_message(text)
+    msg = Message(room_code=room_code, user_name="System", text=encrypted_text, time=time.time())
     db.add(msg)
     db.commit()
     cleanup_old_messages(db, room_code)
@@ -196,7 +214,36 @@ def get_messages(room_code: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     
     messages = db.query(Message).filter(Message.room_code == room_code).order_by(Message.time.asc()).all()
-    return {"messages": [{"user": m.user_name, "text": m.text, "time": m.time} for m in messages]}
+    
+    decrypted_messages = []
+    for m in messages:
+        decrypted_messages.append({
+            "user": m.user_name,
+            "text": decrypt_message(m.text),
+            "time": m.time
+        })
+        
+    return {"messages": decrypted_messages}
+
+@app.post("/message/{room_code}")
+def post_message(room_code: str, message: str, user: str, db: Session = Depends(get_db)):
+    room_code = room_code.upper()
+    room = db.query(Room).filter(Room.room_code == room_code).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="Room not found")
+    
+    encrypted_text = encrypt_message(message)
+    msg = Message(room_code=room_code, user_name=user, text=encrypted_text, time=time.time())
+    db.add(msg)
+    db.commit()
+    cleanup_old_messages(db, room_code)
+    
+    # Mark user as active
+    if room_code not in active_users:
+        active_users[room_code] = set()
+    active_users[room_code].add(user)
+    
+    return {"status": "success"}
 
 @app.post("/typing/{room_code}")
 def typing_indicator(room_code: str, user: str, db: Session = Depends(get_db)):

@@ -60,10 +60,10 @@
     .msg-time { font-size: 0.7rem; opacity: 0.6; margin-top: 4px; text-align: right; }
 </style>
 </head>
-<body class="bg-base text-text h-screen overflow-hidden flex flex-col font-sans selection:bg-white selection:text-black">
+<body class="bg-base text-text h-[100dvh] overflow-hidden flex flex-col font-sans selection:bg-white selection:text-black">
     
     <!-- App Container -->
-    <div class="relative z-10 flex flex-col h-full w-full max-w-5xl mx-auto bg-base md:my-4 md:rounded-xl md:h-[calc(100vh-2rem)] md:border md:border-border overflow-hidden">
+    <div class="relative z-10 flex flex-col h-full w-full max-w-5xl mx-auto bg-base md:my-4 md:rounded-xl md:h-[calc(100dvh-2rem)] md:border md:border-border overflow-hidden">
         
         <!-- Header -->
         <header class="flex items-center justify-between p-4 border-b border-border bg-surface shrink-0">
@@ -107,10 +107,13 @@
                 <input 
                     type="text" 
                     id="messageInput" 
-                    class="flex-1 bg-elevated border border-border rounded-lg px-4 py-3 text-sm text-text placeholder-borderhover focus:outline-none focus:border-text transition-all"
+                    class="flex-1 bg-elevated border border-border rounded-lg px-4 py-3 text-base text-text placeholder-borderhover focus:outline-none focus:border-text transition-all"
                     placeholder="Type a message..."
                     autocomplete="off"
                 >
+                <button type="button" id="micBtn" onclick="toggleSpeechRecognition()" class="p-3 rounded-lg bg-surface border border-border hover:bg-border text-text transition-colors flex-shrink-0" title="Speech to text">
+                    <svg id="micIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                </button>
                 <button type="submit" id="sendBtn" class="p-3 rounded-lg bg-white hover:bg-gray-200 text-black transition-colors disabled:opacity-50 flex-shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                 </button>
@@ -355,6 +358,63 @@
             
             if (wasScrolledToBottom || msgs[msgs.length-1]?.user === userName) {
                 container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // Speech to Text
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        let isRecording = false;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-US';
+
+            recognition.onstart = function() {
+                isRecording = true;
+                const micIcon = document.getElementById('micIcon');
+                micIcon.classList.add('text-red-500', 'animate-pulse');
+                document.getElementById('messageInput').placeholder = "Listening...";
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                const input = document.getElementById('messageInput');
+                input.value = input.value ? input.value + " " + transcript : transcript;
+            };
+
+            recognition.onerror = function(event) {
+                showToast("Microphone error: " + event.error);
+                stopRecordingUI();
+            };
+
+            recognition.onend = function() {
+                stopRecordingUI();
+            };
+        } else {
+            document.getElementById('micBtn').style.display = 'none';
+        }
+
+        function stopRecordingUI() {
+            isRecording = false;
+            const micIcon = document.getElementById('micIcon');
+            micIcon.classList.remove('text-red-500', 'animate-pulse');
+            document.getElementById('messageInput').placeholder = "Type a message...";
+        }
+
+        function toggleSpeechRecognition() {
+            if (!recognition) return showToast("Speech recognition not supported in this browser.");
+            
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    // Already started
+                }
             }
         }
 
