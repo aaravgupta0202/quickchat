@@ -3,95 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>" type="image/svg+xml">
-    <title>QuickChat | Premium Temporary Chat</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ededed' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'></path></svg>" type="image/svg+xml">
+    <title>QuickChat | Instant Temporary Messaging</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <script>
         tailwind.config = {
             theme: {
                 extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
-                        primary: '#6d28d9',
-                        secondary: '#3b82f6',
-                        dark: '#0f172a',
-                        darker: '#020617',
-                        card: 'rgba(30, 41, 59, 0.7)'
+                        base: '#000000',
+                        surface: '#0a0a0a',
+                        elevated: '#111111',
+                        border: '#262626',
+                        borderhover: '#404040',
+                        text: '#ededed',
+                        muted: '#a1a1aa'
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-darker text-gray-100 min-h-screen flex flex-col font-sans overflow-x-hidden">
-    <!-- Background Effects -->
-    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-        <div class="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[120px]"></div>
-        <div class="absolute top-[40%] -right-[10%] w-[40%] h-[40%] rounded-full bg-secondary/20 blur-[120px]"></div>
-    </div>
+<body class="bg-base text-text min-h-screen flex flex-col font-sans overflow-x-hidden selection:bg-white selection:text-black">
+    <!-- Grid Background -->
+    <div class="fixed inset-0 z-0 pointer-events-none" style="background-image: linear-gradient(to right, #111 1px, transparent 1px), linear-gradient(to bottom, #111 1px, transparent 1px); background-size: 40px 40px; mask-image: linear-gradient(to bottom, white 0%, transparent 80%); -webkit-mask-image: linear-gradient(to bottom, white 0%, transparent 80%);"></div>
 
     <!-- Navigation -->
-    <nav class="relative z-10 w-full p-6 flex justify-between items-center max-w-7xl mx-auto">
-        <div class="flex items-center gap-2 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
-            💬 QuickChat
+    <nav class="relative z-10 w-full p-6 flex justify-between items-center max-w-6xl mx-auto">
+        <div class="flex items-center gap-2 text-xl font-semibold tracking-tight text-white">
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            QuickChat
         </div>
-        <button onclick="showAbout()" class="text-sm font-medium hover:text-blue-400 transition-colors">
-            How it works
-        </button>
+        <div class="flex items-center gap-4">
+            <button onclick="showAbout()" class="text-sm font-medium text-muted hover:text-white transition-colors">
+                How it works
+            </button>
+            <a href="https://github.com/aaravgupta0202/quickchat" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-md bg-white text-black text-sm font-medium hover:bg-gray-200 transition-colors">
+                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
+                View Source
+            </a>
+        </div>
     </nav>
 
-    <!-- Main Content (Hero Section) -->
-    <main class="relative z-10 flex-grow flex flex-col items-center justify-center p-6 w-full max-w-7xl mx-auto">
-        
-        <div class="text-center mb-12 max-w-3xl animate-fade-in-up">
-            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
-                Connect instantly.<br>
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500">Leave no trace.</span>
+    <!-- Main Content -->
+    <main class="relative z-10 flex-grow flex flex-col items-center justify-center p-6 w-full max-w-6xl mx-auto">
+        <div class="text-center mb-16 max-w-3xl animate-fade-in-up">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 tracking-tighter leading-tight text-white">
+                Instant messaging.<br>
+                <span class="text-muted">Zero persistence.</span>
             </h1>
-            <p class="text-lg md:text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-                Premium, disposable chat rooms that self-destruct after 60 minutes. 
-                Perfect for quick syncs, sharing temporary data, or private conversations.
+            <p class="text-lg md:text-xl text-muted mb-8 max-w-2xl mx-auto font-light">
+                Professional temporary chat rooms that self-destruct exactly 60 minutes after creation. No logs, no trace, completely secure.
             </p>
         </div>
 
-        <div class="glass-card p-8 rounded-2xl w-full max-w-md animate-fade-in-up delay-100 border border-white/10 shadow-2xl">
+        <div class="surface-elevated p-8 rounded-xl w-full max-w-md animate-fade-in-up delay-100">
             <!-- Name Input -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-400 mb-2">Display Name</label>
+                <label class="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">Display Name</label>
                 <input 
                     id="userName" 
-                    placeholder="Enter your alias..." 
-                    class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    placeholder="Enter an alias" 
+                    class="w-full bg-base border border-border rounded-lg px-4 py-3 text-text placeholder-borderhover focus:outline-none focus:border-text focus:ring-1 focus:ring-text transition-all"
                 >
             </div>
 
             <!-- Action Buttons -->
             <div class="space-y-4">
-                <button id="createBtn" onclick="createRoom()" class="w-full relative group overflow-hidden rounded-xl p-[1px]">
-                    <span class="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl opacity-70 group-hover:opacity-100 transition-opacity duration-300"></span>
-                    <div class="relative bg-darker/90 backdrop-blur-xl px-4 py-3 rounded-xl flex items-center justify-center gap-2 group-hover:bg-darker/50 transition-colors">
-                        <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                        <span class="font-semibold text-white">Create New Room</span>
-                    </div>
+                <button id="createBtn" onclick="createRoom()" class="w-full bg-white text-black hover:bg-gray-200 py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"></path></svg>
+                    Create New Room
                 </button>
                 
                 <div class="relative flex py-2 items-center">
-                    <div class="flex-grow border-t border-slate-700/50"></div>
-                    <span class="flex-shrink-0 mx-4 text-gray-500 text-sm">or</span>
-                    <div class="flex-grow border-t border-slate-700/50"></div>
+                    <div class="flex-grow border-t border-border"></div>
+                    <span class="flex-shrink-0 mx-4 text-borderhover text-xs uppercase tracking-widest font-medium">or join existing</span>
+                    <div class="flex-grow border-t border-border"></div>
                 </div>
 
                 <div class="flex gap-2">
                     <input 
                         id="roomCode" 
                         placeholder="Enter Code" 
-                        class="w-2/3 bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 uppercase tracking-widest focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-center"
+                        class="w-2/3 bg-base border border-border rounded-lg px-4 py-3 text-text placeholder-borderhover uppercase tracking-widest focus:outline-none focus:border-text focus:ring-1 focus:ring-text transition-all text-center font-mono"
                     >
-                    <button id="joinBtn" onclick="joinRoom()" class="w-1/3 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-white rounded-xl font-semibold transition-all hover:border-slate-500 flex justify-center items-center">
+                    <button id="joinBtn" onclick="joinRoom()" class="w-1/3 bg-surface hover:bg-border border border-border text-text rounded-lg font-medium transition-colors flex justify-center items-center">
                         Join
                     </button>
                 </div>
@@ -100,31 +99,25 @@
     </main>
 
     <!-- Custom Footer -->
-    <footer class="relative z-10 w-full border-t border-white/5 bg-darker/50 backdrop-blur-md py-6 mt-12">
-        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+    <footer class="relative z-10 w-full border-t border-border bg-base/80 backdrop-blur-md py-6 mt-12">
+        <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
             <!-- Left Side -->
-            <div class="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
-                <div class="font-bold text-xl text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 flex items-center gap-2">
-                    <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-                    QuickChat
-                </div>
-                <div class="hidden md:block w-px h-6 bg-slate-700"></div>
-                <p class="text-sm text-gray-400">
-                    Built by Aarav Gupta, for SBI Hackathon @ GFF 2026
-                </p>
+            <div class="flex items-center gap-2 font-medium text-lg tracking-tight text-white">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                QuickChat
             </div>
 
             <!-- Right Side (Pill Buttons) -->
             <div class="flex flex-wrap justify-center gap-3">
-                <a href="#" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-slate-500 transition-all text-sm font-medium text-gray-300 hover:text-white">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path></svg>
+                <a href="https://aarav-cc.netlify.app/" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-surface hover:bg-border transition-colors text-sm font-medium text-muted hover:text-white">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                     Portfolio
                 </a>
-                <a href="#" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-slate-500 transition-all text-sm font-medium text-gray-300 hover:text-white">
+                <a href="https://github.com/aaravgupta0202" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-surface hover:bg-border transition-colors text-sm font-medium text-muted hover:text-white">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"></path></svg>
                     GitHub
                 </a>
-                <a href="#" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-700 bg-slate-800/50 hover:bg-slate-700 hover:border-slate-500 transition-all text-sm font-medium text-gray-300 hover:text-white">
+                <a href="https://www.linkedin.com/in/aarav-gupta-230269375/" target="_blank" class="flex items-center gap-2 px-4 py-2 rounded-full border border-border bg-surface hover:bg-border transition-colors text-sm font-medium text-muted hover:text-white">
                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
                     LinkedIn
                 </a>
@@ -132,23 +125,23 @@
         </div>
     </footer>
 
-    <!-- Name Validation Modal (if needed) -->
-    <div id="nameModal" class="fixed inset-0 bg-darker/80 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-card rounded-2xl p-6 m-4 max-w-sm w-full border border-white/10 shadow-2xl transform scale-95 transition-transform duration-300" id="nameModalContent">
-            <div class="text-center mb-6">
-                <h2 class="text-xl font-bold text-white mb-2">Display Name Required</h2>
-                <p class="text-gray-400 text-sm">Please enter an alias to continue.</p>
+    <!-- Name Validation Modal -->
+    <div id="nameModal" class="fixed inset-0 bg-base/90 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="surface-elevated rounded-xl p-8 m-4 max-w-sm w-full transform scale-95 transition-transform duration-300" id="nameModalContent">
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold text-white mb-1">Display Name Required</h2>
+                <p class="text-muted text-sm font-light">Please enter an alias to continue.</p>
             </div>
             <input 
                 id="modalUserName" 
-                placeholder="Enter your alias..." 
-                class="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 mb-6"
+                placeholder="Alias" 
+                class="w-full bg-base border border-border rounded-lg px-4 py-3 text-text placeholder-borderhover focus:outline-none focus:border-text mb-6"
             >
             <div class="flex space-x-3">
-                <button onclick="hideNameModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-white py-2.5 rounded-xl font-medium transition-colors">
+                <button onclick="hideNameModal()" class="flex-1 bg-surface border border-border hover:bg-border text-white py-2.5 rounded-lg font-medium transition-colors">
                     Cancel
                 </button>
-                <button onclick="confirmName()" class="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-2.5 rounded-xl font-medium hover:opacity-90 transition-opacity">
+                <button onclick="confirmName()" class="flex-1 bg-white text-black py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors">
                     Confirm
                 </button>
             </div>
@@ -156,41 +149,38 @@
     </div>
 
     <!-- About Modal -->
-    <div id="aboutModal" class="fixed inset-0 bg-darker/80 backdrop-blur-sm flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
-        <div class="glass-card rounded-2xl p-8 m-4 max-w-md w-full border border-white/10 shadow-2xl transform scale-95 transition-transform duration-300" id="aboutModalContent">
-            <h2 class="text-2xl font-bold text-white mb-4">How QuickChat Works</h2>
-            <div class="space-y-4 text-gray-400">
-                <div class="flex gap-4">
-                    <div class="text-blue-400 shrink-0">⏳</div>
+    <div id="aboutModal" class="fixed inset-0 bg-base/90 flex items-center justify-center z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="surface-elevated rounded-xl p-8 m-4 max-w-md w-full transform scale-95 transition-transform duration-300" id="aboutModalContent">
+            <h2 class="text-2xl font-semibold text-white mb-6">How QuickChat Works</h2>
+            <div class="space-y-6 text-muted font-light">
+                <div class="flex gap-4 items-start">
+                    <svg class="w-6 h-6 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                     <p>Rooms and messages automatically self-destruct exactly 60 minutes after creation.</p>
                 </div>
-                <div class="flex gap-4">
-                    <div class="text-purple-400 shrink-0">🔒</div>
-                    <p>No chat history is permanently stored. Once it's gone, it's gone forever.</p>
+                <div class="flex gap-4 items-start">
+                    <svg class="w-6 h-6 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                    <p>No chat history is permanently stored in any database. Once it's gone, it's gone forever.</p>
                 </div>
-                <div class="flex gap-4">
-                    <div class="text-pink-400 shrink-0">🚀</div>
+                <div class="flex gap-4 items-start">
+                    <svg class="w-6 h-6 text-white shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
                     <p>Completely free, fast, and simple to use without requiring any account sign-up.</p>
                 </div>
             </div>
-            <button onclick="hideAbout()" class="mt-8 w-full bg-slate-800 hover:bg-slate-700 border border-slate-700/50 text-white py-3 rounded-xl font-medium transition-colors">
-                Got it
+            <button onclick="hideAbout()" class="mt-8 w-full bg-white text-black py-3 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+                Close
             </button>
         </div>
     </div>
 
     <script>
-        // Since there is no proxy, point directly to the Render backend
         const backend = "https://sample-ii6m.onrender.com";
             
         let pendingAction = null;
         
-        // Modal logic
         function showModal(modalId, contentId) {
             const modal = document.getElementById(modalId);
             const content = document.getElementById(contentId);
             modal.classList.remove('hidden');
-            // Trigger reflow
             void modal.offsetWidth;
             modal.classList.remove('opacity-0');
             content.classList.remove('scale-95');
@@ -201,9 +191,7 @@
             const content = document.getElementById(contentId);
             modal.classList.add('opacity-0');
             content.classList.add('scale-95');
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
+            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
         function showAbout() { showModal('aboutModal', 'aboutModalContent'); }
@@ -240,7 +228,7 @@
         function createRoomDirect() {
             const btn = document.getElementById('createBtn');
             const originalHtml = btn.innerHTML;
-            btn.innerHTML = '<div class="relative bg-darker/90 backdrop-blur-xl px-4 py-3 rounded-xl flex items-center justify-center gap-2"><span class="loading-dots"><div></div><div></div><div></div><div></div></span></div>';
+            btn.innerHTML = '<span class="loading-dots"><div></div><div></div><div></div></span>';
             
             fetch(`${backend}/room/create`, { method: 'POST' })
             .then(res => res.json())
@@ -288,7 +276,6 @@
             });
         }
 
-        // Event listeners
         document.getElementById('userName').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('roomCode').focus(); });
         document.getElementById('roomCode').addEventListener('keypress', (e) => { if (e.key === 'Enter') joinRoom(); });
         document.getElementById('modalUserName').addEventListener('keypress', (e) => { if (e.key === 'Enter') confirmName(); });
