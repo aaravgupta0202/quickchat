@@ -84,7 +84,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
+@app.head("/health")
 def health_check():
     """Endpoint for uptime monitors to prevent Render inactivity spin down."""
     return {"status": "ok", "timestamp": time.time()}

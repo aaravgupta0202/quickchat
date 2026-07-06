@@ -3,7 +3,10 @@ const urlsToCache = [
   './index.html',
   './chat.html',
   './style.css',
-  './icon.svg'
+  './icon.svg',
+  './icon-192.png',
+  './icon-512.png',
+  './manifest.json'
 ];
 
 self.addEventListener('install', event => {
