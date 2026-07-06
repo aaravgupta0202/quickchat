@@ -68,7 +68,7 @@
 <body class="bg-base text-text h-[100dvh] overflow-hidden flex flex-col font-sans selection:bg-white selection:text-black">
     
     <!-- App Container -->
-    <div class="relative z-10 flex flex-col h-[100dvh] w-full bg-base overflow-hidden">
+    <div class="relative z-10 flex flex-col flex-1 w-full bg-base overflow-hidden">
         
         <!-- Header -->
         <header class="flex items-center justify-between p-4 border-b border-border bg-surface shrink-0">
@@ -108,8 +108,8 @@
         <div id="typingIndicator" class="px-6 py-2 text-xs text-muted font-light hidden bg-base"></div>
 
         <!-- Composer -->
-        <div class="p-2 sm:p-4 bg-surface border-t border-border shrink-0">
-            <form id="chatForm" class="flex items-center gap-2 sm:gap-3 w-full max-w-4xl mx-auto" onsubmit="sendMessage(event)">
+        <div class="p-2 sm:p-4 bg-surface border-t border-border shrink-0 pb-safe">
+            <form id="chatForm" class="flex items-center gap-2 sm:gap-3 w-full" onsubmit="sendMessage(event)">
                 <input 
                     type="text" 
                     id="messageInput" 
@@ -309,6 +309,11 @@
             } catch (e) {}
         }
 
+        // Heartbeat
+        setInterval(() => {
+            fetch(`${backend}/heartbeat/${roomCode}?user=${encodeURIComponent(userName)}`, { method: 'POST' }).catch(() => {});
+        }, 10000);
+
         // Typing
         document.getElementById('messageInput').addEventListener('input', () => {
             fetch(`${backend}/typing/${roomCode}?user=${encodeURIComponent(userName)}&deviceId=${deviceId}`, { method: 'POST' }).catch(() => {});
@@ -364,6 +369,20 @@
                     lastMessageCount = data.messages.length;
                     renderMessages(data.messages);
                 }
+                if (data.active_users) {
+                    document.getElementById('userCount').textContent = `${data.active_users.length} online`;
+                    const list = document.getElementById('membersList');
+                    if (list && !document.getElementById('infoModal').classList.contains('hidden')) {
+                        list.innerHTML = '';
+                        data.active_users.forEach(u => {
+                            list.innerHTML += `<div class="flex items-center gap-2 text-sm bg-base p-2 rounded-md border border-border">
+                                <div class="w-1.5 h-1.5 rounded-full ${typingUsers.has(u) ? 'bg-white animate-pulse' : 'bg-green-500'}"></div>
+                                <span class="text-text">${escapeHtml(u)}</span>
+                                ${typingUsers.has(u) ? '<span class="text-xs text-muted ml-auto font-light">typing...</span>' : ''}
+                            </div>`;
+                        });
+                    }
+                }
             } catch (e) {}
         }
 
@@ -405,7 +424,7 @@
         }
 
         // Load saved color for this room
-        const savedColor = localStorage.getItem(`roomColor_${ROOM_CODE}`);
+        const savedColor = localStorage.getItem(`roomColor_${roomCode}`);
         if (savedColor) {
             setAccentColor(savedColor);
         } else {
@@ -415,7 +434,7 @@
         colorPicker.addEventListener('input', (e) => {
             const color = e.target.value;
             setAccentColor(color);
-            localStorage.setItem(`roomColor_${ROOM_CODE}`, color);
+            localStorage.setItem(`roomColor_${roomCode}`, color);
         });
 
         // Speech to Text

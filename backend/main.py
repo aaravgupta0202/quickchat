@@ -93,7 +93,7 @@ def health_check():
 # typing_users: Tracks which users are currently typing in which room
 typing_users: Dict[str, Set[str]] = {}
 # active_users: Tracks users who have recently joined or interacted in a room
-active_users: Dict[str, Set[str]] = {}
+active_users: Dict[str, Dict[str, float]] = {}
 
 def add_system_message(db: Session, room_code: str, text: str):
     """Add system message to room."""
@@ -168,8 +168,8 @@ def join_room(room_code: str, user: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     
     if room_code not in active_users:
-        active_users[room_code] = set()
-    active_users[room_code].add(user)
+        active_users[room_code] = {}
+    active_users[room_code][user] = time.time()
     
     add_system_message(db, room_code, f"<b>{user}</b> joined the chat")
     
@@ -183,7 +183,7 @@ def leave_room(room_code: str, user: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Room not found")
     
     if room_code in active_users and user in active_users[room_code]:
-        active_users[room_code].remove(user)
+        del active_users[room_code][user]
     
     if room_code in typing_users and user in typing_users[room_code]:
         typing_users[room_code].remove(user)
@@ -191,22 +191,7 @@ def leave_room(room_code: str, user: str, db: Session = Depends(get_db)):
     add_system_message(db, room_code, f"<b>{user}</b> left the chat")
     return {"status": "left"}
 
-@app.post("/message/{room_code}")
-def send_message(room_code: str, message: str, user: str, db: Session = Depends(get_db)):
-    room = db.query(Room).filter(Room.room_code == room_code).first()
-    if not room:
-        raise HTTPException(status_code=404, detail="Room not found")
-    
-    if room_code not in active_users:
-        active_users[room_code] = set()
-    active_users[room_code].add(user)
-    
-    new_message = Message(room_code=room_code, user_name=user, text=message, time=time.time())
-    db.add(new_message)
-    db.commit()
-    cleanup_old_messages(db, room_code)
-    
-    return {"status": "success"}
+
 
 @app.get("/messages/{room_code}")
 def get_messages(room_code: str, db: Session = Depends(get_db)):
@@ -224,7 +209,13 @@ def get_messages(room_code: str, db: Session = Depends(get_db)):
             "time": m.time
         })
         
-    return {"messages": decrypted_messages}
+    current_time = time.time()
+    room_active_users = []
+    if room_code in active_users:
+        # filter users who haven't sent a heartbeat in 15 seconds
+        room_active_users = [u for u, t in active_users[room_code].items() if current_time - t < 15]
+
+    return {"messages": decrypted_messages, "active_users": room_active_users}
 
 @app.post("/message/{room_code}")
 def post_message(room_code: str, message: str, user: str, db: Session = Depends(get_db)):
@@ -241,10 +232,18 @@ def post_message(room_code: str, message: str, user: str, db: Session = Depends(
     
     # Mark user as active
     if room_code not in active_users:
-        active_users[room_code] = set()
-    active_users[room_code].add(user)
+        active_users[room_code] = {}
+    active_users[room_code][user] = time.time()
     
     return {"status": "success"}
+
+@app.post("/heartbeat/{room_code}")
+def heartbeat(room_code: str, user: str, db: Session = Depends(get_db)):
+    room_code = room_code.upper()
+    if room_code not in active_users:
+        active_users[room_code] = {}
+    active_users[room_code][user] = time.time()
+    return {"status": "ok"}
 
 @app.post("/typing/{room_code}")
 def typing_indicator(room_code: str, user: str, db: Session = Depends(get_db)):
