@@ -495,11 +495,11 @@
                 '--color-muted': adjustColor(document.getElementById('themeText').value, -40)
             };
             applyTheme(theme);
-            localStorage.setItem(`customTheme_${roomCode}`, JSON.stringify(theme));
+            localStorage.setItem('customTheme', JSON.stringify(theme));
         }
 
         function resetTheme() {
-            localStorage.removeItem(`customTheme_${roomCode}`);
+            localStorage.removeItem('customTheme');
             applyTheme(defaultTheme);
             closeThemeModal();
         }
@@ -517,7 +517,7 @@
             return (usePound?"#":"") + String("000000" + (g | (b << 8) | (r << 16)).toString(16)).slice(-6);
         }
 
-        const savedThemeStr = localStorage.getItem(`customTheme_${roomCode}`);
+        const savedThemeStr = localStorage.getItem('customTheme');
         if (savedThemeStr) {
             try { applyTheme(JSON.parse(savedThemeStr)); } catch (e) { applyTheme(defaultTheme); }
         } else {
