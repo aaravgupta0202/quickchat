@@ -66,6 +66,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/health")
+def health_check():
+    """Endpoint for uptime monitors to prevent Render inactivity spin down."""
+    return {"status": "ok", "timestamp": time.time()}
+
 # In-memory storage for transient state (saves expensive DB writes for serverless environments)
 # typing_users: Tracks which users are currently typing in which room
 typing_users: Dict[str, Set[str]] = {}
